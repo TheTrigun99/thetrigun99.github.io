@@ -134,7 +134,7 @@ $$\hat{\theta}(\lambda) \in A(\frac{y}{\lambda},\widecheck{R}_{\lambda}(\theta),
 ### Intuition géométrique 
 
 Le duality gap nous apprend que la solution duale $\hat{\theta}(\lambda)$ est dans une couronne centrée en $\frac{y}{\lambda}$, mais cette information reste trop grossière: une couronne n'est pas une forme géométrique simple et pratique pour notre screening.  
-On va exploiter la structure convexe du problème pour trouver notre boule adéquate et j'explique ici comment comment ils y arrivent dans l'article.
+On va exploiter la structure convexe du problème pour trouver notre boule adéquate.
 
 Déjà rappelons que $\hat{\theta}(\lambda)$ est la projection de $\frac{y}{\lambda}$ sur $\Delta_X$ qui est **convexe fermé**, donc $[\theta,\hat{\theta}(\lambda)]$ reste dans l'ensemble. Or comme $\hat{\theta}(\lambda)$ est le point de $\Delta_X$ le plus proche de $\frac{y}{\lambda}$, ce segment ne peut pas entrer dans la boule intérieure de la couronne, (borne donnée par le duality gap).  
 $\hat{\theta}(\lambda)$ est donc relativement contraint et le point le plus éloigné de $\theta$ parmi les points compatibles avec ces contraintes est obtenu lorsque le segment partant de $\theta$ est tangent à la boule intérieure. Ce point est noté $\theta_{int}$ par l'article et donne notre rayon de sécurité.  
