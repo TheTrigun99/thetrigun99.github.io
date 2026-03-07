@@ -1,5 +1,5 @@
 ---
-title: "Mind the dual gap"
+title: "Mind the dual gap, LASSO"
 categories: ML
 tags: [ML]
 toc: true
@@ -153,7 +153,7 @@ Je fais un léger point sur le $\theta$ que l'on a fixé plus haut.
 Comme dit précédemment, on va utiliser notre screening rule sur des algorithmes itératifs, par conséquent on va construire $\theta_k$ à partir de $\theta_{k-1}$ et ce sera donc le point précédent qui sera le centre de notre boule à l'étape k.
 
 On note $r'(\theta,\beta)$ le rayon de la boule choisie.  
-On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta):= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
+On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
 
 On va utiliser le duality gap comme rayon et non le rayon trouvé géométriquement, parce que celui-ci est un critère d'arrêt standard dans les solveurs et est donc déjà calculé. En effet, si $G(\theta,\beta) \leq \epsilon$, alors par dualité forte $P_{\lambda}(\beta)-P_{\lambda}(\hat{\beta}(\lambda)) \leq \epsilon$.     
 C'est donc numériquement favorable.  
