@@ -143,11 +143,14 @@ C'=B(\theta,(\tilde{R}_{\lambda}(\theta)^2 - \hat{R}_{\lambda}(\beta)^2)^{1/2})
 $$
 où le rayon correspond à $||\theta_{int}-\theta||$ (cf figure 1)
 
-### qui est $\theta$ ? + Converging regions
+### qui est $\theta$ ?
 
 Je fais un léger point sur le $\theta$ que l'on a fixé plus haut.  
 Plus haut, on fait l'hypothèse que l'on dispose d'un $\theta \in \Delta_X$, il faut néanmoins en choisir un.  
 Avec les conditions KKT sur le problème dual, on sait que $\hat{\theta}(\lambda)$ est proportionnel au résidu et on va donc construire à l'étape k, $\theta_k$ en fonction du résidu $\rho_k = y -X \beta_k$ et d'un constante $\alpha_k$ qu'on doit choisir de sorte que $\theta_k = \alpha_k \rho_k \in \Delta_X$.  
+On choisit donc $\alpha_k$ comme la meilleure mise à l’échelle du résidu $\rho_k$ qui reste dualement faisable, autrement dit la projection du coefficient optimal non contraint sur l’intervalle de faisabilité imposé par $\Delta_X$
+
+### Construction de la safe region
 
 On note $r'(\theta,\beta)$ le rayon de la boule choisie.  
 On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
@@ -170,7 +173,7 @@ Je rappelle que nous faisons ici un algorithme pendant le solveur, mais le solve
 Voici le pseudo-code donné dans l'article:
 ![alt text](assets/img/lasso/image.png)
 
-Je n'ai pas évoqué le warm-start plus haut, mais cela consiste à calculer la solution $\beta_{k+1}$ non pas à partir de 0, mais à partir de $\beta_k$ (possible, car les solutions du lasso sont continues).
+Je n'ai pas évoqué le warm-start plus haut, mais cela consiste à calculer la solution $\beta_{k+1}$ non pas à partir de 0, mais à partir de $\beta_k$ (possible en pratique, car pour deux valeurs proches de $\lambda$, les solutions successives du LASSO sont généralement proches. Cela rend le warm-start très efficace le long du chemin de régularisation.).
 
 J'omet ici la fonction `__init__` qui est la même que dans mon dernier post au détail près que j'ai mis la target `y` et sa version standardisée `yc` dedans.
 
@@ -222,7 +225,7 @@ Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/pa
         active = np.where(scores >= 1)[0]
         z_passiv = np.where(scores < 1)[0]
 {% endhighlight %}
-Ici, j'ai vectorisé les calculs pour la safe rule avec numpy ce qui change vraiment la donne sur un gros dataset comme Leukemia où $p=7000$ (en faisant une boucle, il fallait 20 minutes pour que le code termine tandis que sklearn met lui quelques secondes secondes...).
+Ici, j'ai vectorisé les calculs pour la safe rule avec numpy ce qui change vraiment la donne pour le temps d'éxécution sur un gros dataset comme Leukemia où $p=7000$.
 
 On récupère donc ensuite `active` et `z_passiv` qui nous permettent de screen les variables passives et uniquement faire la CD (coordinate descent) sur l'ensemble actif.  
 On calcule ensuite $\theta$ en calculant $\alpha$ ($\rho$ est en argument).  
@@ -276,7 +279,12 @@ Ensuite, on va update le résidu incrémentalement durant l'algorithme et ne pas
 rho = rho + self.Xc[:, passiv] @ beta[passiv]
 {% endhighlight %} 
 
+On annule les coefficients nuls dans le résidu.  
 Cette étape est possible uniquement s'il y a des variables passives (`len(passiv)>0`).  
+{% highlight python%}
+      rho = rho - x_j * (beta_new_j-beta[j])
+{%endhighlight%}
+Lorsque que l'on met à jour les variables actives
 De même si `len(active)==0`, on s'arrête, car on sait alors que $\beta=0$.  
 Le reste correspond quasiment à la CD classique que j'ai implémenté dans mon dernier post.  
 Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard que le critère naïf basé sur la variation des coefficients, et il est déjà calculé dans l’algorithme pour construire la safe region.
@@ -287,5 +295,5 @@ Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard
 Sur Leukemia, l’implémentation avec screening dynamique réduit fortement le temps de calcul par rapport à une coordinate descent naïve pure Python/Numpy (on passe de +10min à 80 secondes).  
 Elle reste cependant nettement plus lente que sklearn, qui bénéficie d’une implémentation bas niveau très optimisée.  
 Le but ici n’est donc pas de rivaliser avec sklearn en temps brut, mais de reproduire correctement l’idée de l’article et de montrer son impact concret sur le solveur.
-Voici ci dessous le lasso path de notre code qui correspond aussi à celui obtenu avec sklearn:
+Voici ci-dessous le lasso path de notre code qui correspond aussi à celui obtenu avec sklearn:
 ![image](assets/img/lasso/saferule.webp)
