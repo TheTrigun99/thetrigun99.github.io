@@ -56,11 +56,11 @@ $$
 $$
 où $\Delta_X = \{\theta' \in \mathbb{R}^n : |x_j^\top \theta'| \le 1,\ \forall j \in \{1,.. .,p\}\}$ est le dual feasible set avec $\theta'=\frac{\theta}{\lambda}$  (la condition provient de la minimisation en $\beta$).  
 On observe que le problème dual revient à:
+
 $$
 \hat{\theta}(\lambda)
 =
 \arg\min_{\theta' \in \Delta_X}
-
 \left\|
 \theta' - \frac{y}{\lambda}
 \right\|_2 
