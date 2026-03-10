@@ -291,10 +291,18 @@ Le reste correspond quasiment à la CD classique que j'ai implémenté dans mon 
 Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard que le critère naïf basé sur la variation des coefficients, et il est déjà calculé dans l’algorithme pour construire la safe region.
 
 
-### Résultats
+## Résultats
 
 Sur Leukemia, l’implémentation avec screening dynamique réduit fortement le temps de calcul par rapport à une coordinate descent naïve pure Python/Numpy (on passe de +10min à 80 secondes).  
 Elle reste cependant nettement plus lente que sklearn, qui bénéficie d’une implémentation bas niveau très optimisée.  
 Le but ici n’est donc pas de rivaliser avec sklearn en temps brut, mais de reproduire correctement l’idée de l’article et de montrer son impact concret sur le solveur.
 Voici ci-dessous le lasso path de notre code qui correspond aussi à celui obtenu avec sklearn:
 ![image](assets/img/lasso/saferule.webp)
+
+## Ressources
+
+- [Convex Optimization, Boyd and Vandenberghe](https://web.stanford.edu/~boyd/cvxbook/)
+- A. Ndiaye, O. Fercoq, A. Gramfort, J. Salmon.  
+   *Mind the Duality Gap: Safer Rules for the Lasso*.  
+   ICML 2017.  
+   https://arxiv.org/abs/1505.03410
