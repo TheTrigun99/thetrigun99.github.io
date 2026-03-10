@@ -9,14 +9,12 @@ math: true
 
 ## Introduction
 
-On a implémenté dernièrement le solveur classique du LASSO (coordinate descent), néanmoins sur de grosses bases de données et où par exemple on a peu d'observations pour beaucoup de variables (p>>n), le solveur simple est trop lent.  
-
-Les implémentations SOTA (State of the art) du LASSO utilisent de l'optimisation convexe pour accélérer les solveurs. J'implémente et présente ici l'article **Mind the duality gap: safer rules for the Lasso** (RAJOUTER REF) qui utilisent ce qu'on appelle des *screening rules*. En effet, on va chercher à enlever les features inutiles (donc telles que $\beta_j = 0$ à l'optimum) avant et pendant le solveur.  
-
-L'article utilise astucieusement le duality gap pour créer des règles performantes (utilisé dans sci-kit.learn par exemple) améliorant la rapidité et la convergence du solveur.
+Le solveur classique du LASSO par coordinate descent devient vite coûteux lorsque le nombre de variables est très grand devant le nombre d’observations (p≫n).  
+Les implémentations modernes accélèrent ce solveur à l’aide de screening rules, qui permettent d’éliminer de manière sûre des variables dont le coefficient optimal est nul.  
+Dans ce billet, j’implémente et j’explique l’article [Mind the Duality Gap: Safer Rules for the Lasso](https://arxiv.org/pdf/1505.03410), qui exploite le duality gap pour construire des régions de sécurité convergentes et améliorer fortement le coût du solveur.
 
 
-Je me suis basé principalement sur le livre de Boyd Convex Optimization pour acquérir les connaissances nécéssaires à implémenter et comprendre cet article
+Je me suis principalement appuyé sur Convex Optimization de Boyd et Vandenberghe pour acquérir les connaissances nécessaires à implémenter et comprendre cet article
 
 ## Un peu de théorie
 
@@ -36,13 +34,13 @@ $$
 $$ 
 où $X \in \mathbb{R}^{n\times p}$ et $\beta \in \mathbb{R}^{p}$
 
-En décomposant entre résidus et features (on pose $z = X\beta - y$ pour le problème primal) et en utilisant le lagrangien:
+En décomposant entre résidus et features (on pose $\rho = y - X \beta$ pour le problème primal) et en utilisant le lagrangien:
 
 $$
-L(z,\theta, \beta)=\frac{\|z \|_2^2}{2} +\theta^{T}((y-X \beta)-z) + \lambda | \beta \|_1
+L(\rho,\theta, \beta)=\frac{\|\rho \|_2^2}{2} +\theta^{T}((y-X \beta)-\rho) + \lambda | \beta \|_1
 $$
 où on a introduit $\theta$ la variable duale.  
-On obtient ainsi le problème dual après avoir minimisé en $z$ et en $\beta$ :
+On obtient ainsi le problème dual après avoir minimisé en $\rho$ et en $\beta$ :
 
 $$
 \hat{\theta}(\lambda)
@@ -73,7 +71,7 @@ La solution du problème primal n'est, elle, pas forcément unique (en fonction 
 On note aussi que à l'optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lambda)=y$, où l'on a pris en compte la normalisation par rapport à $\lambda$.
 
 **Dans la suite on notera $\theta$ et plus $\theta'$ même s'il s'agit de la version normalisée.**  
-En utilisant les conditions de KKT sur $L(z,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (ce sont les mêmes genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):  
+En utilisant les conditions de KKT sur $L(\rho,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (c'est le même genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):  
 
 $$\hat{\beta}_{j}(\lambda)=0\ \text{dès que} \ |x_j^{T} \hat{\theta}(\lambda) |<1$$
 
@@ -96,7 +94,7 @@ Comme la solution duale est dans l'ensemble $C$, on sait pour sûr que $\beta_j=
 On a pas encore défini l'ensemble $C$, mais on voit que si on peut calculer $\mu_C(x_j)$ explicitement et facilement, les calculs seront légers d'un point de vue computationnel.
 Pour cela, il faut bien choisir $C$, donc prendre un ensemble simple (pour limiter le coût de calcul de la safe rule) et le plus petit possible pour éliminer le plus grand nombre de variables inutiles.
 
-L'article utilise une boule particulière, mais des dômes ont aussi déjà pu être utilisé ou d'autres figures géométriques.
+L'article utilise une boule particulière, mais des dômes ont aussi déjà été utilisés ou d'autres figures géométriques.
 
 Si l'on se base sur 1 seul ensemble $C$ que l'on utilise ,disons juste avant le solveur, on a une *règle statique*.  
 L'article propose une *règle dynamique* qui agit à chaque étape du solveur ( itératif, coordinate descent) et pour ça, donne une suite d'ensemble qui converge (dans le sens où le diamètre tend vers 0) vers $\{ \hat{\theta (\lambda)} \}$.
@@ -106,8 +104,8 @@ L'article propose une *règle dynamique* qui agit à chaque étape du solveur ( 
 ### Les débuts
 
 Pour une boule $B(c,r)$, on a $\mu_C(x_j)=|x_j^{T}c|+r||x_j||$.  
-L'article utilise le duality gap pour trouver une suite de boule adéquate.  
-En effet, les conditions de Slater étant vérifiées dans le lasso, on a la dualité faible:
+L'article utilise le duality gap pour trouver une suite de boules adéquates.  
+En effet, pour tout couple primal/dual faisable, on a la dualité faible. Comme les conditions de Slater sont en plus vérifiées ici, on dispose en plus de la dualité forte:
 $$
 \frac{1}{2}\|y\|^2
 -
@@ -150,7 +148,6 @@ où le rayon correspond à $||\theta_{int}-\theta||$ (cf figure 1)
 Je fais un léger point sur le $\theta$ que l'on a fixé plus haut.  
 Plus haut, on fait l'hypothèse que l'on dispose d'un $\theta \in \Delta_X$, il faut néanmoins en choisir un.  
 Avec les conditions KKT sur le problème dual, on sait que $\hat{\theta}(\lambda)$ est proportionnel au résidu et on va donc construire à l'étape k, $\theta_k$ en fonction du résidu $\rho_k = y -X \beta_k$ et d'un constante $\alpha_k$ qu'on doit choisir de sorte que $\theta_k = \alpha_k \rho_k \in \Delta_X$.  
-En minimisant 
 
 On note $r'(\theta,\beta)$ le rayon de la boule choisie.  
 On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
@@ -159,7 +156,7 @@ On va utiliser le duality gap comme rayon et non le rayon trouvé géométriquem
 C'est donc numériquement favorable.  
 
 On note donc $C=B(\theta,r(\theta,\beta))$  
-On a construis notre rayon à partir de $G(\theta,\beta)$, donc si le solveur cv vers $(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$, alors le rayon tend vers 0.  
+On a construit notre rayon à partir de $G(\theta,\beta)$, donc si le solveur converge vers $(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$, alors le rayon tend vers 0.  
 Ainsi $C_{k}=B(\theta_k,r(\theta_k,\beta_k))$ est une safe region qui converge vers $\{\hat{\theta}(\lambda)\}$ quand $\lim(\theta_k,\beta_k)=(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$.  
 
 ## Implémentation
@@ -177,14 +174,12 @@ Je n'ai pas évoqué le warm-start plus haut, mais cela consiste à calculer la 
 
 J'omet ici la fonction `__init__` qui est la même que dans mon dernier post au détail près que j'ai mis la target `y` et sa version standardisée `yc` dedans.
 
-Le `f` du pseudo correspond à la fréquence à laquelle, on fait le screening. En effet, le screening a quand même un coût et il est non nécéssaire de l'avoir à chaque *epoch*.
+Le `f` du pseudo-code correspond à la fréquence à laquelle, on fait le screening. En effet, le screening a quand même un coût et il est non nécessaire de l'avoir à chaque *epoch*.
 
 Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/passif et $\theta$:
 
 {% highlight python %}
-    def safe_test(self,c,r,x):
-        return abs(np.dot( x, c))+ r * np.sqrt(np.dot( x, x))
-    
+
     def gap(self,beta,theta,a,rho):
         Gap = max((
             0.5 * np.sum((rho)**2)
@@ -192,11 +187,8 @@ Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/pa
             - 0.5 * np.sum(self.yc**2)
             + 0.5 * (a**2) * np.sum((theta - self.yc / a)**2)), 0.0)
         return Gap
-    
-    def safe_active_set(self,theta,beta,active,a,rho):
-        n_active = []
-        z_passiv = []
-        
+
+    def safe_active_set(self,theta,beta,a,rho):
         gap = self.gap(beta,theta,a,rho)
         r = np.sqrt(2 * gap)/a
         scores = np.abs(self.Xc.T @ theta) + 
@@ -205,4 +197,95 @@ Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/pa
         active = np.where(scores >= 1)[0]
         z_passiv = np.where(scores < 1)[0]
         return active,z_passiv
+  
+    def compute_theta(self,rho,active,a):
+        
+        if len(active)==0:
+            return np.zeros_like(rho)
+        
+        m = np.max( np.abs( self.Xc[:, active ].T @ rho ))
+        
+        if m == 0:
+            return np.zeros_like(rho)
+        
+        alpha0 = np.dot(self.yc, rho) / ( a * np.dot(rho, rho))
+        alpha = min( max(-1/m, alpha0), 1/m )
+        return alpha * rho
 {% endhighlight %}
+
+`gap` calcule le duality gap et on note que l'on prend en argument le résidu $\rho$ !!!  
+`safe_active_test` correspond enfin au calcul de notre safe region $C$ à l'aide des 2 fonctions ci-dessus. 
+
+{% highlight python%}
+        scores = np.abs(self.Xc.T @ theta) + 
+                r * np.sqrt(self.Xn2)
+        active = np.where(scores >= 1)[0]
+        z_passiv = np.where(scores < 1)[0]
+{% endhighlight %}
+Ici, j'ai vectorisé les calculs pour la safe rule avec numpy ce qui change vraiment la donne sur un gros dataset comme Leukemia où $p=7000$ (en faisant une boucle, il fallait 20 minutes pour que le code termine tandis que sklearn met lui quelques secondes secondes...).
+
+On récupère donc ensuite `active` et `z_passiv` qui nous permettent de screen les variables passives et uniquement faire la CD (coordinate descent) sur l'ensemble actif.  
+On calcule ensuite $\theta$ en calculant $\alpha$ ($\rho$ est en argument).  
+On va modifier le résidu en direct dans le CD et c'est pour ça qu'on le met en argument de chaque fonction ci-dessus. En effet, le calcul de $\rho$ est très coûteux quand l'on a beaucoup de variables (même si on screen entre temps), car celui-ci demande une complexité en O(n*p), tandis que l'on peut modifer le résidu incrémentalement en O(n).
+
+{% highlight python %}
+    def safe_gap_rule(self,tol,iter,bi,f,a):
+        active = np.arange(self.p)
+        beta = bi.copy()
+        rho = self.yc - self.Xc @ beta
+        theta = self.compute_theta(rho,active,a)
+        for i in range(iter):
+            
+            if i % f == 0:
+
+                active ,passiv = self.safe_active_set(theta,beta,active,a,rho)
+                
+                if len(passiv) > 0:
+                    rho = rho + self.Xc[:, passiv] @ beta[passiv]
+                    beta[passiv] = 0.0
+                theta = self.compute_theta(rho,active,a)
+                if len(active) == 0:
+                    break
+            if self.gap(beta,theta,a,rho)<tol:
+                break
+            for j in active:
+                x_j = self.Xc[:, j]
+                r_j = rho + x_j * beta[j]
+                beta_new_j = self.s_threshold(np.dot(x_j, r_j), a) / self.Xn2[j]
+                delta = beta_new_j - beta[j]
+                rho = rho - x_j * delta
+                beta[j] = beta_new_j
+        return beta
+{% endhighlight %}
+
+Voici la fonction principale `safe_gap_rule` qui fait le screening et la CD.  
+On commence par définir les paramètres initaux ($\rho$,$\theta$ et `active` qui correspond à l'ensemble des indices des variables actives).  
+Comme dit plus haut, on ne screen pas à chaque epoch, mais uniquement lorsque `i%f==0`. 
+{% highlight python%}
+                if len(passiv) > 0:
+                    rho = rho + self.Xc[:, passiv] @ beta[passiv]
+                    beta[passiv] = 0.0
+                theta = self.compute_theta(rho,active,a)
+                if len(active) == 0:
+                    break
+{% endhighlight %} 
+
+Ensuite, on va update le résidu incrémentalement durant l'algorithme et ne pas le recalculer entièrement ce qui nous permet d'éviter la complexité en O(n*p) !!! 
+
+{% highlight python%}
+rho = rho + self.Xc[:, passiv] @ beta[passiv]
+{% endhighlight %} 
+
+Cette étape est possible uniquement s'il y a des variables passives (`len(passiv)>0`).  
+De même si `len(active)==0`, on s'arrête, car on sait alors que $\beta=0$.  
+Le reste correspond quasiment à la CD classique que j'ai implémenté dans mon dernier post.  
+Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard que le critère naïf basé sur la variation des coefficients, et il est déjà calculé dans l’algorithme pour construire la safe region.
+
+
+### Résultats
+
+Sur Leukemia, l’implémentation avec screening dynamique réduit fortement le temps de calcul par rapport à une coordinate descent naïve pure Python/Numpy (on passe de +10min à 80 secondes).  
+Elle reste cependant nettement plus lente que sklearn, qui bénéficie d’une implémentation bas niveau très optimisée.  
+Le but ici n’est donc pas de rivaliser avec sklearn en temps brut, mais de reproduire correctement l’idée de l’article et de montrer son impact concret sur le solveur.
+Voici ci dessous le lasso path de notre code qui correspond aussi à celui obtenu avec sklearn:
+![image](assets/img/lasso/saferule.webp)
