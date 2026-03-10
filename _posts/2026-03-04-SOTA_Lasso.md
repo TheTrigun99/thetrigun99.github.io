@@ -79,6 +79,7 @@ Le problème dual donne une solution unique et des conditions géométriques sim
 
 ## Screening rules
 
+
 Notre but ici, c'est d'éliminer correctement les variables inutiles, être une variable $\beta_j$ inutile, ici ça veut dire que $|x_j^{T} \hat{\theta}(\lambda) |<1$.  
 
 L'idée maintenant, c'est que comme on connaît pas la solution duale, on va regarder des ensembles $C$ un peu plus gros qui la **contiennent** (on appelle ces ensembles *safe regions*) et demander une propriété plus forte.  
