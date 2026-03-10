@@ -9,9 +9,9 @@ math: true
 
 ## Introduction
 
-On a implémenté dernièrement le solveur classique du LASSO (coordinate descent), néanmoins sur de grosses bases de données et où par exemple on a peu d'individu pour beaucoup d'observations, le solveur est trop lent.  
+On a implémenté dernièrement le solveur classique du LASSO (coordinate descent), néanmoins sur de grosses bases de données et où par exemple on a peu d'observations pour beaucoup de variables (p>>n), le solveur simple est trop lent.  
 
-Les implémentations SOTA (State of the art) du LASSO utilisent de l'optimisation convexe pour accélérer les solveurs. J'implémente et présente ici l'article **Mind the duality gap: safer rules for the Lasso** (RAJOUTER REF) qui utilisent ce qu'on appelle des *screening rules*. En effet, avant d'appliquer le solveur, on va chercher à enlever les features inutiles (donc telles que $\beta_j = 0$ à l'optimum) avant et pendant le solveur.  
+Les implémentations SOTA (State of the art) du LASSO utilisent de l'optimisation convexe pour accélérer les solveurs. J'implémente et présente ici l'article **Mind the duality gap: safer rules for the Lasso** (RAJOUTER REF) qui utilisent ce qu'on appelle des *screening rules*. En effet, on va chercher à enlever les features inutiles (donc telles que $\beta_j = 0$ à l'optimum) avant et pendant le solveur.  
 
 L'article utilise astucieusement le duality gap pour créer des règles performantes (utilisé dans sci-kit.learn par exemple) améliorant la rapidité et la convergence du solveur.
 
@@ -75,7 +75,7 @@ On note aussi que à l'optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lamb
 **Dans la suite on notera $\theta$ et plus $\theta'$ même s'il s'agit de la version normalisée.**  
 En utilisant les conditions de KKT sur $L(z,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (ce sont les mêmes genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):  
 
-$\hat{\beta}_{j}(\lambda)=0$ dès que $|x_j^{T} \hat{\theta}(\lambda) |<1$
+$$\hat{\beta}_{j}(\lambda)=0\ \text{dès que} \ |x_j^{T} \hat{\theta}(\lambda) |<1$$
 
 Le problème dual donne une solution unique et des conditions géométriques simples, seul souci: on ne connaît pas la solution duale !
 
@@ -145,12 +145,12 @@ C'=B(\theta,(\tilde{R}_{\lambda}(\theta)^2 - \tilde{R}_{\lambda}(\beta)^2)^{1/2}
 $$
 où le rayon correspond à $||\theta_{int}-\theta||$ (cf figure 1)
 
-
-
 ### qui est $\theta$ ? + Converging regions
 
 Je fais un léger point sur le $\theta$ que l'on a fixé plus haut.  
-Comme dit précédemment, on va utiliser notre screening rule sur des algorithmes itératifs, par conséquent on va construire $\theta_k$ à partir de $\theta_{k-1}$ et ce sera donc le point précédent qui sera le centre de notre boule à l'étape k.
+Plus haut, on fait l'hypothèse que l'on dispose d'un $\theta \in \Delta_X$, il faut néanmoins en choisir un.  
+Avec les conditions KKT sur le problème dual, on sait que $\hat{\theta}(\lambda)$ est proportionnel au résidu et on va donc construire à l'étape k, $\theta_k$ en fonction du résidu $\rho_k = y -X \beta_k$ et d'un constante $\alpha_k$ qu'on doit choisir de sorte que $\theta_k = \alpha_k \rho_k \in \Delta_X$.  
+En minimisant 
 
 On note $r'(\theta,\beta)$ le rayon de la boule choisie.  
 On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
@@ -162,7 +162,47 @@ On note donc $C=B(\theta,r(\theta,\beta))$
 On a construis notre rayon à partir de $G(\theta,\beta)$, donc si le solveur cv vers $(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$, alors le rayon tend vers 0.  
 Ainsi $C_{k}=B(\theta_k,r(\theta_k,\beta_k))$ est une safe region qui converge vers $\{\hat{\theta}(\lambda)\}$ quand $\lim(\theta_k,\beta_k)=(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$.  
 
+## Implémentation
 
+L'article donne un pseudo code qu'il faut néanmoins bien  arranger (vectorisation et pas de calculs inutiles), car avec de gros datasets (comme Leukemia qu'on va utiliser) les redondances coûtent très cher.
 
+Vous trouverez le code exact dans mon repo github  [mettre lien]  
 
+Je rappelle que nous faisons ici un algorithme pendant le solveur, mais le solveur lui ne change pas. L'algorithme de coordinate descent ne change pas, on rajoute uniquement du screening qui enlève les variables passives de telle sorte à ce que le solveur n'update que les variables actives.  
 
+Voici le pseudo-code donné dans l'article:
+![alt text](assets/img/lasso/image.png)
+
+Je n'ai pas évoqué le warm-start plus haut, mais cela consiste à calculer la solution $\beta_{k+1}$ non pas à partir de 0, mais à partir de $\beta_k$ (possible, car les solutions du lasso sont continues).
+
+J'omet ici la fonction `__init__` qui est la même que dans mon dernier post au détail près que j'ai mis la target `y` et sa version standardisée `yc` dedans.
+
+Le `f` du pseudo correspond à la fréquence à laquelle, on fait le screening. En effet, le screening a quand même un coût et il est non nécéssaire de l'avoir à chaque *epoch*.
+
+Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/passif et $\theta$:
+
+{% highlight python %}
+    def safe_test(self,c,r,x):
+        return abs(np.dot( x, c))+ r * np.sqrt(np.dot( x, x))
+    
+    def gap(self,beta,theta,a,rho):
+        Gap = max((
+            0.5 * np.sum((rho)**2)
+            + a * np.sum(np.abs(beta))
+            - 0.5 * np.sum(self.yc**2)
+            + 0.5 * (a**2) * np.sum((theta - self.yc / a)**2)), 0.0)
+        return Gap
+    
+    def safe_active_set(self,theta,beta,active,a,rho):
+        n_active = []
+        z_passiv = []
+        
+        gap = self.gap(beta,theta,a,rho)
+        r = np.sqrt(2 * gap)/a
+        scores = np.abs(self.Xc.T @ theta) + 
+                r * np.sqrt(self.Xn2)
+
+        active = np.where(scores >= 1)[0]
+        z_passiv = np.where(scores < 1)[0]
+        return active,z_passiv
+{% endhighlight %}
