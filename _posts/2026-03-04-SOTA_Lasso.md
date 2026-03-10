@@ -238,7 +238,7 @@ On va modifier le résidu en direct dans le CD et c'est pour ça qu'on le met en
             
             if i % f == 0:
 
-                active ,passiv = self.safe_active_set(theta,beta,active,a,rho)
+                active ,passiv = self.safe_active_set(theta,beta,a,rho)
                 
                 if len(passiv) > 0:
                     rho = rho + self.Xc[:, passiv] @ beta[passiv]
