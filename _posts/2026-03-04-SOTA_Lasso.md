@@ -163,7 +163,7 @@ Ainsi $C_{k}=B(\theta_k,r(\theta_k,\beta_k))$ est une safe region qui converge v
 
 L'article donne un pseudo code qu'il faut néanmoins bien  arranger (vectorisation et pas de calculs inutiles), car avec de gros datasets (comme Leukemia qu'on va utiliser) les redondances coûtent très cher.
 
-Vous trouverez le code exact dans mon repo github  [mettre lien]  
+Vous trouverez le code exact dans mon [repo github](https://github.com/TheTrigun99/mlfromscratch/tree/main/lasso)  !
 
 Je rappelle que nous faisons ici un algorithme pendant le solveur, mais le solveur lui ne change pas. L'algorithme de coordinate descent ne change pas, on rajoute uniquement du screening qui enlève les variables passives de telle sorte à ce que le solveur n'update que les variables actives.  
 
