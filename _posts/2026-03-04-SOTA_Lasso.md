@@ -267,7 +267,7 @@ Comme dit plus haut, on ne screen pas à chaque epoch, mais uniquement lorsque `
 {% highlight python%}
                 if len(passiv) > 0:
                     rho = rho + self.Xc[:, passiv] @ beta[passiv]
-                    beta[passiv] = 0.0
+                    beta[passiv] = 0
                 theta = self.compute_theta(rho,active,a)
                 if len(active) == 0:
                     break
