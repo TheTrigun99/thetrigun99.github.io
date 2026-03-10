@@ -65,13 +65,14 @@ $$
 \theta' - \frac{y}{\lambda}
 \right\|_2 
 $$
+
 et donc que $\hat{\theta}(\lambda)$ est la projection de $\frac{y}{\lambda}$ sur $\Delta_X$ avec la norme euclidienne. $\Delta_X$ étant convexe et fermé, celle-ci est unique par théorème.  
 La solution du problème primal n'est, elle, pas forcément unique (en fonction du rang de X).  
 
 On note aussi que à l'optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lambda)=y$, où l'on a pris en compte la normalisation par rapport à $\lambda$.
 
 **Dans la suite on notera $\theta$ et plus $\theta'$ même s'il s'agit de la version normalisée.**  
-En utilisant les conditions de KKT sur $L(\rho,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (c'est le même genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):  
+En utilisant les conditions de KKT sur $L(\rho,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (c'est le même genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat): 
 
 $$
 \hat{\beta}_{j}(\lambda)=0\ \text{dès que} \ |x_j^{T} \hat{\theta}(\lambda) |<1
