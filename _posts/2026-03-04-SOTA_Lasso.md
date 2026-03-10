@@ -73,7 +73,9 @@ On note aussi que à l'optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lamb
 **Dans la suite on notera $\theta$ et plus $\theta'$ même s'il s'agit de la version normalisée.**  
 En utilisant les conditions de KKT sur $L(\rho,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (c'est le même genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):  
 
-$$\hat{\beta}_{j}(\lambda)=0\ \text{dès que} \ |x_j^{T} \hat{\theta}(\lambda) |<1$$
+$$
+\hat{\beta}_{j}(\lambda)=0\ \text{dès que} \ |x_j^{T} \hat{\theta}(\lambda) |<1
+$$
 
 Le problème dual donne une solution unique et des conditions géométriques simples, seul souci: on ne connaît pas la solution duale !
 
@@ -81,7 +83,9 @@ Le problème dual donne une solution unique et des conditions géométriques sim
 
 
 Notre but ici, c'est d'éliminer correctement les variables inutiles, être une variable $\beta_j$ inutile, ici ça veut dire que 
-$$|x_j^{T} \hat{\theta}(\lambda) |<1$$ 
+$$
+|x_j^{T} \hat{\theta}(\lambda) |<1
+$$ 
 
 L'idée maintenant, c'est que comme on connaît pas la solution duale, on va regarder des ensembles $C$ un peu plus gros qui la **contiennent** (on appelle ces ensembles *safe regions*) et demander une propriété plus forte.  
 Si celle-ci est vérifiée, on saura qu'on pourra rejeter la variable $\beta_j$ sans connaître la solution duale.
