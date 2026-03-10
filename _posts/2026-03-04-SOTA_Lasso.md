@@ -125,9 +125,9 @@ $$
 =\hat{R}_{\lambda}(\beta)
 $$
 
-On fixe maintenant un point $\theta \in \Delta_X$, alors $\widecheck{R}_{\lambda}(\theta)= \|\theta - \frac{y}{\lambda}\| \geq \|\hat{\theta}(\lambda) - \frac{y}{\lambda}\|$ par définition de la projection.  
+On fixe maintenant un point $\theta \in \Delta_X$, alors $\tilde{R}_{\lambda}(\theta)= \|\theta - \frac{y}{\lambda}\| \geq \|\hat{\theta}(\lambda) - \frac{y}{\lambda}\|$ par définition de la projection.  
 Ainsi la solution duale est dans couronne ou **annulus** :
-$$\hat{\theta}(\lambda) \in A(\frac{y}{\lambda},\widecheck{R}_{\lambda}(\theta),\hat{R}_{\lambda}(\beta))$$
+$$\hat{\theta}(\lambda) \in A(\frac{y}{\lambda},\tilde{R}_{\lambda}(\theta),\hat{R}_{\lambda}(\beta))$$
 
 ### Intuition géométrique 
 
@@ -139,7 +139,7 @@ $\hat{\theta}(\lambda)$ est donc relativement contraint et le point le plus élo
 On obtient ainsi une boule centrée en $\theta$ et contenant la solution duale.  
 Pour conclure, on obtient comme safe region 
 $$
-C'=B(\theta,(\tilde{R}_{\lambda}(\theta)^2 - \tilde{R}_{\lambda}(\beta)^2)^{1/2})
+C'=B(\theta,(\tilde{R}_{\lambda}(\theta)^2 - \hat{R}_{\lambda}(\beta)^2)^{1/2})
 $$
 où le rayon correspond à $||\theta_{int}-\theta||$ (cf figure 1)
 
