@@ -284,8 +284,9 @@ Cette étape est possible uniquement s'il y a des variables passives (`len(passi
 {% highlight python%}
       rho = rho - x_j * (beta_new_j-beta[j])
 {%endhighlight%}
-Lorsque que l'on met à jour les variables actives
-De même si `len(active)==0`, on s'arrête, car on sait alors que $\beta=0$.  
+Lorsque que l'on met à jour les variables actives, on soustrait la variation de la coordonnées $\beta_j$.  
+On évite donc bien de calculer $y - X \beta$ entièrement.  
+On note que si `len(active)==0`, on s'arrête, car on sait alors que $\beta=0$.  
 Le reste correspond quasiment à la CD classique que j'ai implémenté dans mon dernier post.  
 Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard que le critère naïf basé sur la variation des coefficients, et il est déjà calculé dans l’algorithme pour construire la safe region.
 
