@@ -21,12 +21,11 @@ order: 1
   <p>
     Part of Université Paris-Saclay, ranked #12 worldwide (QS 2024). <br>
     Relevant coursework: measure theory & integration, PDEs, information theory, fluid mechanics, signal processing, quantum physics, statistics, Stochastic processes.<br>
-    GPA: 4.07/4.33
   </p>
 </details>
 
 <details>
-  <summary><strong>CPGE PCSI – PC* — Lycée Kléber (2022 – 2024)</strong></summary>
+  <summary><strong>CPGE PC* — Lycée Kléber (2022 – 2024)</strong></summary>
   <p>
     Two-year intensive program in mathematics and physics, preparing for France's most selective engineering schools.
     <strong>Admitted to École Polytechnique</strong> (ranked #1 in France, top 0.1% of applicants), CentraleSupélec, Mines PSL (Most prestigious engineering schools)<br>
