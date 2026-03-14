@@ -4,8 +4,10 @@ categories: ML
 tags: [ML]
 toc: true
 math: true
+lang: fr
+page_id: SOTA_lasso
+permalink: /posts/SOTA_lasso/
 ---
-
 
 ## Introduction
 

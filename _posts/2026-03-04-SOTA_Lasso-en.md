@@ -4,23 +4,24 @@ categories: ML
 tags: [ML]
 toc: true
 math: true
+lang: en
+page_id: SOTA_lasso
+permalink: /posts/SOTA_lasso/
 ---
-
 
 ## Introduction
 
-Le solveur classique du LASSO par coordinate descent devient vite coûteux lorsque le nombre de variables est très grand devant le nombre d’observations (p≫n).  
-Les implémentations modernes accélèrent ce solveur à l’aide de screening rules, qui permettent d’éliminer de manière sûre des variables dont le coefficient optimal est nul.  
-Dans ce billet, j’implémente et j’explique l’article [Mind the Duality Gap: Safer Rules for the Lasso](https://arxiv.org/pdf/1505.03410), qui exploite le duality gap pour construire des régions de sécurité convergentes et améliorer fortement le coût du solveur.
+The classical LASSO solver based on coordinate descent quickly becomes expensive when the number of variables is much larger than the number of observations ($p≫n$).  
+Modern implementations speed up this solver using screening rules, which safely eliminate variables whose optimal coefficient is zero.  
+In this post, I implement and explain the paper [Mind the Duality Gap: Safer Rules for the Lasso](https://arxiv.org/pdf/1505.03410), which leverages the duality gap to build convergent safe regions and significantly reduce the cost of the solver.
 
+I primarily relied on *Convex Optimization* by Boyd and Vandenberghe to acquire the background needed to implement and understand this paper.
 
-Je me suis principalement appuyé sur Convex Optimization de Boyd et Vandenberghe pour acquérir les connaissances nécessaires à implémenter et comprendre cet article
+## A bit of theory
 
-## Un peu de théorie
+Before understanding what the paper does and why it works, let's first change perspective on the LASSO.
 
-Avant de comprendre ce que fait l'article et pourquoi ça marche, on va d'abord changer de point de vue sur le LASSO:
-
-Je rappelle que le problème Primal du lasso est:
+Recall that the primal LASSO problem is:
 
 $$
 \hat{\beta}(\lambda)
@@ -31,16 +32,16 @@ $$
 +
 \lambda\| \beta \|_1
 \right)
-$$ 
-où $X \in \mathbb{R}^{n\times p}$ et $\beta \in \mathbb{R}^{p}$
+$$
+where $X \in \mathbb{R}^{n\times p}$ and $\beta \in \mathbb{R}^{p}$.
 
-En décomposant entre résidus et features (on pose $\rho = y - X \beta$ pour le problème primal) et en utilisant le lagrangien:
+By splitting between residuals and features (we set $\rho = y - X \beta$ for the primal problem) and using the Lagrangian:
 
 $$
-L(\rho,\theta, \beta)=\frac{\|\rho \|_2^2}{2} +\theta^{T}((y-X \beta)-\rho) + \lambda | \beta \|_1
+L(\rho,\theta, \beta)=\frac{\|\rho \|_2^2}{2} +\theta^{T}((y-X \beta)-\rho) + \lambda \| \beta \|_1
 $$
-où on a introduit $\theta$ la variable duale.  
-On obtient ainsi le problème dual après avoir minimisé en $\rho$ et en $\beta$ :
+where $\theta$ is the dual variable.  
+After minimizing over $\rho$ and $\beta$, we obtain the dual problem:
 
 $$
 \hat{\theta}(\lambda)
@@ -51,69 +52,68 @@ $$
 \frac{\lambda^2}{2}
 \left\|
 \theta' - \frac{y}{\lambda}
-\right\|_2^2 
+\right\|_2^2
 =\arg\max_{\theta' \in \Delta_X} g(\theta')
 $$
-où $\Delta_X = \{\theta' \in \mathbb{R}^n : |x_j^\top \theta'| \le 1,\ \forall j \in \{1,.. .,p\}\}$ est le dual feasible set avec $\theta'=\frac{\theta}{\lambda}$  (la condition provient de la minimisation en $\beta$).  
-On observe que le problème dual revient à:
+where $\Delta_X = \{\theta' \in \mathbb{R}^n : |x_j^\top \theta'| \le 1,\ \forall j \in \{1,\ldots,p\}\}$ is the dual feasible set, with $\theta'=\frac{\theta}{\lambda}$ (the constraint arises from minimizing over $\beta$).  
+We observe that the dual problem reduces to:
 $$
 \hat{\theta}(\lambda)
 =
 \arg\min_{\theta' \in \Delta_X}
 \left\|
 \theta' - \frac{y}{\lambda}
-\right\|_2 
+\right\|_2
 $$
 
-et donc que $\hat{\theta}(\lambda)$ est la projection de $\frac{y}{\lambda}$ sur $\Delta_X$ avec la norme euclidienne. $\Delta_X$ étant convexe et fermé, celle-ci est unique par théorème.  
-La solution du problème primal n'est, elle, pas forcément unique (en fonction du rang de X).  
+so $\hat{\theta}(\lambda)$ is the projection of $\frac{y}{\lambda}$ onto $\Delta_X$ under the Euclidean norm. Since $\Delta_X$ is convex and closed, this projection is unique by theorem.  
+The solution to the primal problem is not necessarily unique (depending on the rank of X).
 
-On note aussi que à l'optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lambda)=y$, où l'on a pris en compte la normalisation par rapport à $\lambda$.
+Note also that at the optimum, $\lambda\hat{\theta}(\lambda)+X\hat{\beta}(\lambda)=y$, accounting for the normalization by $\lambda$.
 
-**Dans la suite on notera $\theta$ et plus $\theta'$ même s'il s'agit de la version normalisée.**  
-En utilisant les conditions de KKT sur $L(\rho,\theta, \beta)$, on trouve des conditions sur les $\beta_j$ (c'est le même genre de calculs qui ont été fait dans mon dernier post qui permettent d'aboutir à ce résultat):
+**In what follows we write $\theta$ instead of $\theta'$, even though it refers to the normalized version.**  
+Applying the KKT conditions to $L(\rho,\theta, \beta)$, we obtain conditions on the $\beta_j$ (similar calculations were carried out in my previous post):
 
 $$
 \hat{\beta}_{j}(\lambda)=0
-\quad \text{dès que} \quad
+\quad \text{as soon as} \quad
 |x_j^{\top}\hat{\theta}(\lambda)| < 1
 $$
 
-Le problème dual donne une solution unique et des conditions géométriques simples, seul souci: on ne connaît pas la solution duale !
+The dual problem yields a unique solution and simple geometric conditions — the only catch is that we do not know the dual solution!
 
 ## Screening rules
 
-
-Notre but ici, c'est d'éliminer correctement les variables inutiles, être une variable $\beta_j$ inutile, ici ça veut dire que 
+Our goal here is to safely eliminate useless variables. A variable $\beta_j$ is useless when:
 $$
 |x_j^{T} \hat{\theta}(\lambda) |<1
-$$ 
+$$
 
-L'idée maintenant, c'est que comme on connaît pas la solution duale, on va regarder des ensembles $C$ un peu plus gros qui la **contiennent** (on appelle ces ensembles *safe regions*) et demander une propriété plus forte.  
-Si celle-ci est vérifiée, on saura qu'on pourra rejeter la variable $\beta_j$ sans connaître la solution duale.
+The key idea is that since we do not know the dual solution, we look at sets $C$ that are slightly larger but **contain** it (these sets are called *safe regions*), and require a stronger property.  
+If that property holds, we can discard the variable $\beta_j$ without knowing the dual solution.
 
-La propriété va correspondre à notre *safe rule* et ici, il s'agit de:
+This property is our *safe rule*:
 $$
 \mu_C(x_j):= \sup_{\theta \in C} |x_j^{T}\theta| <1
 $$
 
-Comme la solution duale est dans l'ensemble $C$, on sait pour sûr que $\beta_j=0$.
+Since the dual solution lies in $C$, we know for certain that $\beta_j=0$.
 
-On a pas encore défini l'ensemble $C$, mais on voit que si on peut calculer $\mu_C(x_j)$ explicitement et facilement, les calculs seront légers d'un point de vue computationnel.
-Pour cela, il faut bien choisir $C$, donc prendre un ensemble simple (pour limiter le coût de calcul de la safe rule) et le plus petit possible pour éliminer le plus grand nombre de variables inutiles.
+We have not yet defined $C$, but we see that if $\mu_C(x_j)$ can be computed explicitly and efficiently, the computation will be lightweight.  
+To achieve this, $C$ must be chosen carefully: simple enough (to keep the cost of evaluating the safe rule low) and as small as possible (to eliminate as many useless variables as possible).
 
-L'article utilise une boule particulière, mais des dômes ont aussi déjà été utilisés ou d'autres figures géométriques.
+The paper uses a particular ball, though domes and other geometric shapes have also been explored in the literature.
 
-Si l'on se base sur 1 seul ensemble $C$ que l'on utilise ,disons juste avant le solveur, on a une *règle statique*.  
-L'article propose une *règle dynamique* qui agit à chaque étape du solveur ( itératif, coordinate descent) et pour ça, donne une suite d'ensemble qui converge (dans le sens où le diamètre tend vers 0) vers $\{ \hat{\theta (\lambda)} \}$.
+If we use a single fixed set $C$ just before the solver, we have a *static rule*.  
+The paper proposes a *dynamic rule* that acts at each step of the (iterative, coordinate descent) solver, providing a sequence of sets that converges (in the sense that the diameter tends to zero) towards $\{ \hat{\theta}(\lambda) \}$.
 
 ## Mind the duality gap
 
-### Les débuts
+### Getting started
 
-Pour une boule $B(c,r)$, on a $\mu_C(x_j)=|x_j^{T}c|+r||x_j||$.  
-L'article utilise le duality gap pour trouver une suite de boules adéquates.  
-En effet, pour tout couple primal/dual faisable, on a la dualité faible. Comme les conditions de Slater sont en plus vérifiées ici, on dispose en plus de la dualité forte:
+For a ball $B(c,r)$, we have $\mu_C(x_j)=|x_j^{T}c|+r\|x_j\|$.  
+The paper uses the duality gap to find a suitable sequence of balls.  
+Indeed, for any primal/dual feasible pair, weak duality holds. Since Slater's conditions are also satisfied here, we further have strong duality:
 $$
 \frac{1}{2}\|y\|^2
 -
@@ -122,10 +122,10 @@ $$
 \le
 \frac{1}{2}\|X\beta - y\|^2
 +
-\lambda \|\beta\|_1 
+\lambda \|\beta\|_1
 $$
-Pour $\theta \in \Delta_X$ !!!  
-On extrait donc une minoration de $\|\theta - \frac{y}{\lambda}\|$ pour tout $\theta \in \Delta_X$ et donc en particulier pour $\hat{\theta}(\lambda)$:
+for $\theta \in \Delta_X$!  
+We therefore extract a lower bound on $\|\theta - \frac{y}{\lambda}\|$ for any $\theta \in \Delta_X$, and in particular for $\hat{\theta}(\lambda)$:
 $$
 \left\lVert \theta - \frac{y}{\lambda} \right\rVert
 \ge
@@ -133,61 +133,60 @@ $$
 =\hat{R}_{\lambda}(\beta)
 $$
 
-On fixe maintenant un point $\theta \in \Delta_X$, alors $\tilde{R}_{\lambda}(\theta)= \|\theta - \frac{y}{\lambda}\| \geq \|\hat{\theta}(\lambda) - \frac{y}{\lambda}\|$ par définition de la projection.  
-Ainsi la solution duale est dans couronne ou **annulus** :
-$$\hat{\theta}(\lambda) \in A(\frac{y}{\lambda},\tilde{R}_{\lambda}(\theta),\hat{R}_{\lambda}(\beta))$$
+Now fix a point $\theta \in \Delta_X$. Then $\tilde{R}_{\lambda}(\theta)= \|\theta - \frac{y}{\lambda}\| \geq \|\hat{\theta}(\lambda) - \frac{y}{\lambda}\|$ by definition of the projection.  
+Thus the dual solution lies in the annulus:
+$$\hat{\theta}(\lambda) \in A\!\left(\frac{y}{\lambda},\tilde{R}_{\lambda}(\theta),\hat{R}_{\lambda}(\beta)\right)$$
 
-### Intuition géométrique 
+### Geometric intuition
 
-Le duality gap nous apprend que la solution duale $\hat{\theta}(\lambda)$ est dans une couronne centrée en $\frac{y}{\lambda}$, mais cette information reste trop grossière: une couronne n'est pas une forme géométrique simple et pratique pour notre screening.  
-On va exploiter la structure convexe du problème pour trouver notre boule adéquate.
+The duality gap tells us that the dual solution $\hat{\theta}(\lambda)$ lies in an annulus centered at $\frac{y}{\lambda}$, but this information is too coarse: an annulus is not a simple or convenient shape for screening.  
+We will exploit the convex structure of the problem to derive a suitable ball.
 
-Déjà rappelons que $\hat{\theta}(\lambda)$ est la projection de $\frac{y}{\lambda}$ sur $\Delta_X$ qui est **convexe fermé**, donc $[\theta,\hat{\theta}(\lambda)]$ reste dans l'ensemble. Or comme $\hat{\theta}(\lambda)$ est le point de $\Delta_X$ le plus proche de $\frac{y}{\lambda}$, ce segment ne peut pas entrer dans la boule intérieure de la couronne, (borne donnée par le duality gap).  
-$\hat{\theta}(\lambda)$ est donc relativement contraint et le point le plus éloigné de $\theta$ parmi les points compatibles avec ces contraintes est obtenu lorsque le segment partant de $\theta$ est tangent à la boule intérieure. Ce point est noté $\theta_{int}$ par l'article et donne notre rayon de sécurité.  
-On obtient ainsi une boule centrée en $\theta$ et contenant la solution duale.  
-Pour conclure, on obtient comme safe region 
+Recall that $\hat{\theta}(\lambda)$ is the projection of $\frac{y}{\lambda}$ onto $\Delta_X$, which is **convex and closed**, so the segment $[\theta,\hat{\theta}(\lambda)]$ stays inside the set. Since $\hat{\theta}(\lambda)$ is the point of $\Delta_X$ closest to $\frac{y}{\lambda}$, this segment cannot enter the inner ball of the annulus (whose radius is given by the duality gap).  
+$\hat{\theta}(\lambda)$ is therefore geometrically constrained, and the farthest point from $\theta$ that is compatible with these constraints is obtained when the segment from $\theta$ is tangent to the inner ball. This point is denoted $\theta_{int}$ in the paper and gives our safety radius.  
+We thus obtain a ball centered at $\theta$ that contains the dual solution.  
+In conclusion, the safe region is:
 $$
-C'=B(\theta,(\tilde{R}_{\lambda}(\theta)^2 - \hat{R}_{\lambda}(\beta)^2)^{1/2})
+C'=B\!\left(\theta,\left(\tilde{R}_{\lambda}(\theta)^2 - \hat{R}_{\lambda}(\beta)^2\right)^{1/2}\right)
 $$
-où le rayon correspond à $||\theta_{int}-\theta||$ (cf figure 1)
+where the radius equals $\|\theta_{int}-\theta\|$ (see Figure 1).
+### What is $\theta$?
 
-### qui est $\theta$ ?
+A brief note on the $\theta$ we fixed earlier.  
+Above, we assumed we have some $\theta \in \Delta_X$, but we still need to actually choose one.  
+From the KKT conditions on the dual problem, we know that $\hat{\theta}(\lambda)$ is proportional to the residual. At step $k$ we therefore build $\theta_k$ from the residual $\rho_k = y - X\beta_k$ and a constant $\alpha_k$ chosen so that $\theta_k = \alpha_k \rho_k \in \Delta_X$.  
+We pick $\alpha_k$ as the best scaling of $\rho_k$ that remains dually feasible — in other words, the projection of the unconstrained optimal coefficient onto the feasibility interval imposed by $\Delta_X$.
 
-Je fais un léger point sur le $\theta$ que l'on a fixé plus haut.  
-Plus haut, on fait l'hypothèse que l'on dispose d'un $\theta \in \Delta_X$, il faut néanmoins en choisir un.  
-Avec les conditions KKT sur le problème dual, on sait que $\hat{\theta}(\lambda)$ est proportionnel au résidu et on va donc construire à l'étape k, $\theta_k$ en fonction du résidu $\rho_k = y -X \beta_k$ et d'un constante $\alpha_k$ qu'on doit choisir de sorte que $\theta_k = \alpha_k \rho_k \in \Delta_X$.  
-On choisit donc $\alpha_k$ comme la meilleure mise à l’échelle du résidu $\rho_k$ qui reste dualement faisable, autrement dit la projection du coefficient optimal non contraint sur l’intervalle de faisabilité imposé par $\Delta_X$
+### Building the safe region
 
-### Construction de la safe region
+Let $r'(\theta,\beta)$ denote the radius of the chosen ball.  
+We have $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$, where $G(\theta,\beta)$ is the duality gap, and $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ by strong duality.
 
-On note $r'(\theta,\beta)$ le rayon de la boule choisie.  
-On a que $r'(\theta,\beta)^2 \leq r(\theta,\beta)^2:= \frac{2}{\lambda^2}G(\theta,\beta)$ où $G(\theta,\beta)$ correspond au duality gap et $r(\hat{\theta}(\lambda),\hat{\beta}(\lambda))=0$ avec la dualité forte.  
+We use the duality gap as the radius rather than the geometrically derived one, because the duality gap is a standard stopping criterion in solvers and is therefore already computed. Indeed, if $G(\theta,\beta) \leq \epsilon$, then by strong duality $P_{\lambda}(\beta)-P_{\lambda}(\hat{\beta}(\lambda)) \leq \epsilon$.  
+This makes it numerically convenient.
 
-On va utiliser le duality gap comme rayon et non le rayon trouvé géométriquement, parce que celui-ci est un critère d'arrêt standard dans les solveurs et est donc déjà calculé. En effet, si $G(\theta,\beta) \leq \epsilon$, alors par dualité forte $P_{\lambda}(\beta)-P_{\lambda}(\hat{\beta}(\lambda)) \leq \epsilon$.     
-C'est donc numériquement favorable.  
+We therefore set $C=B(\theta,r(\theta,\beta))$.  
+Since our radius is built from $G(\theta,\beta)$, if the solver converges to $(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$, the radius tends to zero.  
+Thus $C_{k}=B(\theta_k,r(\theta_k,\beta_k))$ is a safe region that converges to $\{\hat{\theta}(\lambda)\}$ as $\lim(\theta_k,\beta_k)=(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$.
 
-On note donc $C=B(\theta,r(\theta,\beta))$  
-On a construit notre rayon à partir de $G(\theta,\beta)$, donc si le solveur converge vers $(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$, alors le rayon tend vers 0.  
-Ainsi $C_{k}=B(\theta_k,r(\theta_k,\beta_k))$ est une safe region qui converge vers $\{\hat{\theta}(\lambda)\}$ quand $\lim(\theta_k,\beta_k)=(\hat{\theta}(\lambda),\hat{\beta}(\lambda))$.  
+## Implementation
 
-## Implémentation
+The paper provides pseudocode that nonetheless requires careful adaptation (vectorization and removal of redundant computations), since on large datasets like Leukemia, inefficiencies are very costly.
 
-L'article donne un pseudo code qu'il faut néanmoins bien  arranger (vectorisation et pas de calculs inutiles), car avec de gros datasets (comme Leukemia qu'on va utiliser) les redondances coûtent très cher.
+You can find the full code in my [GitHub repo](https://github.com/TheTrigun99/mlfromscratch/tree/main/lasso)!
 
-Vous trouverez le code exact dans mon [repo github](https://github.com/TheTrigun99/mlfromscratch/tree/main/lasso)  !
+Recall that the algorithm runs *inside* the solver, but the solver itself does not change. The coordinate descent algorithm is unchanged: we simply add screening that removes passive variables so that the solver only updates the active ones.
 
-Je rappelle que nous faisons ici un algorithme pendant le solveur, mais le solveur lui ne change pas. L'algorithme de coordinate descent ne change pas, on rajoute uniquement du screening qui enlève les variables passives de telle sorte à ce que le solveur n'update que les variables actives.  
-
-Voici le pseudo-code donné dans l'article:
+Here is the pseudocode from the paper:
 ![alt text](assets/img/lasso/image.png)
 
-Je n'ai pas évoqué le warm-start plus haut, mais cela consiste à calculer la solution $\beta_{k+1}$ non pas à partir de 0, mais à partir de $\beta_k$ (possible en pratique, car pour deux valeurs proches de $\lambda$, les solutions successives du LASSO sont généralement proches. Cela rend le warm-start très efficace le long du chemin de régularisation.).
+I did not mention warm-starting earlier: it consists of initializing $\beta_{k+1}$ from $\beta_k$ rather than from zero (this is valid in practice because for two close values of $\lambda$, the successive LASSO solutions are generally close. This makes warm-starting very effective along the regularization path).
 
-J'omet ici la fonction `__init__` qui est la même que dans mon dernier post au détail près que j'ai mis la target `y` et sa version standardisée `yc` dedans.
+I omit the `__init__` function here, which is identical to the one in my previous post except that I moved the target `y` and its standardized version `yc` into it.
 
-Le `f` du pseudo-code correspond à la fréquence à laquelle, on fait le screening. En effet, le screening a quand même un coût et il est non nécessaire de l'avoir à chaque *epoch*.
+The `f` parameter in the pseudocode controls how often screening is performed. Screening does carry a cost, so running it at every epoch is unnecessary.
 
-Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/passif et $\theta$:
+Following the pseudocode, we start by computing the active/passive set and $\theta$:
 
 {% highlight python %}
 
@@ -224,20 +223,21 @@ Comme suggéré par le pseudo code, on commence par calculer l'ensemble actif/pa
         return alpha * rho
 {% endhighlight %}
 
-`gap` calcule le duality gap et on note que l'on prend en argument le résidu $\rho$ !!!  
-`safe_active_test` correspond enfin au calcul de notre safe region $C$ à l'aide des 2 fonctions ci-dessus. 
+`gap` computes the duality gap — note that the residual $\rho$ is passed as an argument!  
+`safe_active_set` computes our safe region $C$ using the two functions above.
 
-{% highlight python%}
+{% highlight python %}
         scores = np.abs(self.Xc.T @ theta) + 
                 r * np.sqrt(self.Xn2)
         active = np.where(scores >= 1)[0]
         z_passiv = np.where(scores < 1)[0]
 {% endhighlight %}
-Ici, j'ai vectorisé les calculs pour la safe rule avec numpy ce qui change vraiment la donne pour le temps d'éxécution sur un gros dataset comme Leukemia où $p=7000$.
 
-On récupère donc ensuite `active` et `z_passiv` qui nous permettent de screen les variables passives et uniquement faire la CD (coordinate descent) sur l'ensemble actif.  
-On calcule ensuite $\theta$ en calculant $\alpha$ ($\rho$ est en argument).  
-On va modifier le résidu en direct dans le CD et c'est pour ça qu'on le met en argument de chaque fonction ci-dessus. En effet, le calcul de $\rho$ est très coûteux quand l'on a beaucoup de variables (même si on screen entre temps), car celui-ci demande une complexité en O(n*p), tandis que l'on peut modifer le résidu incrémentalement en O(n).
+Here I vectorized the safe rule computation with NumPy, which makes a real difference on large datasets like Leukemia where $p=7000$.
+
+We then retrieve `active` and `z_passiv`, which let us screen out passive variables and run coordinate descent only on the active set.  
+We then compute $\theta$ by computing $\alpha$ (with $\rho$ as an argument).  
+We update the residual in-place inside the CD loop, which is why it is passed as an argument to each function above. Indeed, recomputing $\rho$ from scratch is expensive when $p$ is large (even with screening), as it requires $O(n \cdot p)$ operations, whereas the residual can be updated incrementally in $O(n)$.
 
 {% highlight python %}
     def safe_gap_rule(self,tol,iter,bi,f,a):
@@ -269,45 +269,47 @@ On va modifier le résidu en direct dans le CD et c'est pour ça qu'on le met en
         return beta
 {% endhighlight %}
 
-Voici la fonction principale `safe_gap_rule` qui fait le screening et la CD.  
-On commence par définir les paramètres initaux ($\rho$,$\theta$ et `active` qui correspond à l'ensemble des indices des variables actives).  
-Comme dit plus haut, on ne screen pas à chaque epoch, mais uniquement lorsque `i%f==0`. 
-{% highlight python%}
+This is the main function `safe_gap_rule`, which handles both screening and CD.  
+We start by initializing the parameters ($\rho$, $\theta$, and `active`, the index set of active variables).  
+As noted above, screening is not performed at every epoch, only when `i % f == 0`.
+
+{% highlight python %}
                 if len(passiv) > 0:
                     rho = rho + self.Xc[:, passiv] @ beta[passiv]
                     beta[passiv] = 0
                 theta = self.compute_theta(rho,active,a)
                 if len(active) == 0:
                     break
-{% endhighlight %} 
+{% endhighlight %}
 
-Ensuite, on va update le résidu incrémentalement durant l'algorithme et ne pas le recalculer entièrement ce qui nous permet d'éviter la complexité en O(n*p) !!! 
+We update the residual incrementally throughout the algorithm rather than recomputing it from scratch, avoiding the $O(n \cdot p)$ cost.
 
-{% highlight python%}
+{% highlight python %}
 rho = rho + self.Xc[:, passiv] @ beta[passiv]
-{% endhighlight %} 
+{% endhighlight %}
 
-On annule les coefficients nuls dans le résidu.  
-Cette étape est possible uniquement s'il y a des variables passives (`len(passiv)>0`).  
-{% highlight python%}
-      rho = rho - x_j * (beta_new_j-beta[j])
-{%endhighlight%}
-Lorsque que l'on met à jour les variables actives, on soustrait la variation de la coordonnées $\beta_j$.  
-On évite donc bien de calculer $y - X \beta$ entièrement.  
-On note que si `len(active)==0`, on s'arrête, car on sait alors que $\beta=0$.  
-Le reste correspond quasiment à la CD classique que j'ai implémenté dans mon dernier post.  
-Ici, j’utilise le duality gap comme critère d’arrêt. C’est plus standard que le critère naïf basé sur la variation des coefficients, et il est déjà calculé dans l’algorithme pour construire la safe region.
+This removes the contribution of the zeroed-out coefficients from the residual.  
+This step only applies when there are passive variables (`len(passiv) > 0`).
 
+{% highlight python %}
+      rho = rho - x_j * (beta_new_j - beta[j])
+{% endhighlight %}
 
-## Résultats
+When updating the active variables, we subtract the change in coordinate $\beta_j$.  
+This ensures we never recompute $y - X\beta$ in full.  
+Note that if `len(active) == 0`, we stop immediately, since we know $\beta = 0$.  
+The rest closely mirrors the standard CD implemented in my previous post.  
+Here, the duality gap serves as the stopping criterion. This is more principled than the naive criterion based on coefficient variation, and it is already computed inside the algorithm to build the safe region.
 
-Sur Leukemia, l’implémentation avec screening dynamique réduit fortement le temps de calcul par rapport à une coordinate descent naïve pure Python/Numpy (on passe de +10min à 80 secondes).  
-Elle reste cependant nettement plus lente que sklearn, qui bénéficie d’une implémentation bas niveau très optimisée.  
-Le but ici n’est donc pas de rivaliser avec sklearn en temps brut, mais de reproduire correctement l’idée de l’article et de montrer son impact concret sur le solveur.
-Voici ci-dessous le lasso path de notre code qui correspond aussi à celui obtenu avec sklearn:
+## Results
+
+On the Leukemia dataset, the implementation with dynamic screening significantly reduces computation time compared to a naive coordinate descent in pure Python/NumPy (from over 10 minutes down to 80 seconds).  
+It remains considerably slower than sklearn, which benefits from a highly optimized low-level implementation.  
+The goal here is therefore not to compete with sklearn on raw speed, but to correctly reproduce the paper's idea and demonstrate its concrete impact on the solver.  
+Below is the LASSO path produced by our code, which matches the one obtained with sklearn:
 ![image](assets/img/lasso/saferule.webp)
 
-## Ressources
+## Resources
 
 - [Convex Optimization, Boyd and Vandenberghe](https://web.stanford.edu/~boyd/cvxbook/)
 - A. Ndiaye, O. Fercoq, A. Gramfort, J. Salmon.  

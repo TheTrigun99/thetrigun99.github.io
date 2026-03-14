@@ -10,7 +10,7 @@ order: 1
 
 📞 +33 7 67 91 90 60  
 ✉️ damien.aupretre@student-cs.fr  
-🐙 TheTrigun99
+🐙 TheTrigun99 - github
 
 ---
 
@@ -19,25 +19,26 @@ order: 1
 <details open>
   <summary><strong>Master of Engineering — CentraleSupélec (2024 – 2027)</strong></summary>
   <p>
-    Cours majeurs : convergence et intégration, équations aux dérivées partielles, théorie de l’information,
-    mécanique des fluides, traitement du signal, physique quantique et statistiques.<br>
-    Fait partie de l’Université Paris-Saclay, classée 12ᵉ au niveau mondial.
+    Part of Université Paris-Saclay, ranked #12 worldwide (QS 2024). <br>
+    Relevant coursework: measure theory & integration, PDEs, information theory, fluid mechanics, signal processing, quantum physics, statistics, Stochastic processes.<br>
+    GPA: 4.07/4.33
   </p>
 </details>
 
 <details>
   <summary><strong>CPGE PCSI – PC* — Lycée Kléber (2022 – 2024)</strong></summary>
   <p>
-    Résultats : admis à l’École Polytechnique (classée 1ʳᵉ en France), Mines PSL et CentraleSupélec.<br>
-    Spécialité : physique, chimie et mathématiques.
+    Two-year intensive program in mathematics and physics, preparing for France's most selective engineering schools.
+    <strong>Admitted to École Polytechnique</strong> (ranked #1 in France, top 0.1% of applicants), CentraleSupélec, Mines PSL (Most prestigious engineering schools)<br>
+    GPA: 4.3 / 4.3
   </p>
 </details>
 
 <details>
   <summary><strong>Deutsch-Französisch Gymnasium (DFG-LFA) (2015 – 2022)</strong></summary>
   <p>
-    Abitur : 1.0 (GPA : 4.0)<br>
-    Spécialité : maths, biologie et chimie.
+    Bilingual French-German Abitur : 1.0 (maximum grade)<br>
+    Specialisation: mathematics, biology, and chemistry
   </p>
 </details>
 
@@ -46,36 +47,38 @@ order: 1
 ## Projects-Experience
 
 <details open>
-  <summary><strong>Spotify Recommender from scratch — Personnel (2025)</strong></summary>
+  <summary><strong>Explaining and implementing Research Papers in Machine learning — Personal Project (2025 - ??)</strong></summary>
   <ul>
-    <li>Recommandation de musiques fondée sur le contenu audio et le filtrage collaboratif (spotify-based).</li>
-    <li>Création d’une web API Spotify pour générer des données uniques.</li>
-    <li>Utilisation de OpenL3 (content filtering), FAISS (ANN) et implémentation from scratch de Word2Vec.</li>
+    <li>Focusing on a deep understand of machine learning algorithms/optimization and implementing these from scratch</li>
+    <li>Implemented Word2Vec (SGNS) from scratch, including the skip-gram objective and negative sampling.</li>
+    <li>Implemented the Safe Screening Gap Rule for LASSO — an optimisation technique that provably eliminates inactive features before convergence, dramatically reducing computation.</li>
+    <li>Built core regularisation methods (LASSO, Ridge)</li>
   </ul>
 </details>
 
 <details>
-  <summary><strong>Kaggle Challenge — CentraleSupélec (2025)</strong></summary>
+  <summary><strong>Kaggle Challenges — Personal Project (2025)</strong></summary>
   <ul>
-    <li>Prédiction d’un risque d’accident à partir de données tabulaires avec XGBoost, CatBoost et des réseaux de neurones.</li>
-    <li>Conception d’un pipeline d’ingénierie des variables et d’une stratégie d’optimisation des hyperparamètres.</li>
+    <li>Learned the machine learning basics and Deep Learning basic library and participated in 2 competitions </li>
+    <li>Predicted accident risk from tabular data using an ensemble of XGBoost, CatBoost, and neural networks.</li>
+    <li>Built a full ML pipeline covering feature engineering, hyperparameter tuning, and model stacking.</li>
   </ul>
 </details>
 
 <details>
-  <summary><strong>Projet de Data Science en Santé — CentraleSupélec (2025)</strong></summary>
+  <summary><strong>Health Data Science Project — CentraleSupélec (2025)</strong></summary>
   <ul>
-    <li>Analyse de données génomiques de haute dimension pour identifier des groupes de gènes associés aux cancers cérébraux pédiatriques.</li>
-    <li>Application d’une Analyse Discriminante pour identifier les gènes dominants dans les données génomiques.</li>
-    <li>Identification stable d’environ 10 ensembles de gènes robustes par localisation tumorale.</li>
+    <li>Analysed high-dimensional multimodal genomic data (gene expression + DNA alteration) from pediatric brain cancer patients to identify tumour-localisation biomarkers.</li>
+    <li>Implemented and compared multiple sparse classification methods (LASSO logistic regression, Sparse Discriminant Analysis, SGCCA, Multiview), with a focus on the multi-block methods handling joint analysis across data types.</li>
+    <li>Reduced dimensionality from 15,000+ genomic variables down to a handful of robust, interpretable biomarkers per tumour class.</li>
   </ul>
 </details>
 
 <details>
-  <summary><strong>TIPE, Projet de physique — Lycée Kléber (2023)</strong></summary>
+  <summary><strong>TIPE, Independent Physics Research Project — Lycée Kléber (2023)</strong></summary>
   <ul>
-    <li>Étude des effets de capillarité et de flottabilité en faisant varier les volumes de liquide et les propriétés de surface de balles de ping-pong.</li>
-    <li>Modélisation de la dynamique d’éjection à partir d’un gobelet rempli d’eau à l’aide des principes de la mécanique des fluides.</li>
+    <li>Investigated capillarity and buoyancy effects by varying liquid volumes and surface properties of ping-pong balls.</li>
+    <li>Modelled ejection dynamics from a water-filled cup using fluid mechanics principles (surface tension, pressure balance).</li>
   </ul>
 </details>
 
@@ -84,13 +87,13 @@ order: 1
 ## Skills
 
 <details open>
-  <summary><strong>Compétences</strong></summary>
+  <summary><strong>Skills</strong></summary>
   <ul>
     <li>Python (NumPy, pandas)</li>
-    <li>Processus stochastiques</li>
-    <li>Algèbre linéaire</li>
-    <li>Chimie organique</li>
-    <li>Collaboration en équipe</li>
+    <li>Machine learning</li>
+    <li>Linear Algebra</li>
+    <li>R (statistical computing)</li>
+    <li>Stochastic processes</li>
     <li>Communication</li>
   </ul>
 </details>
@@ -100,10 +103,10 @@ order: 1
 ## Languages
 
 <details open>
-  <summary><strong>Langues</strong></summary>
+  <summary><strong>Languagues</strong></summary>
   <ul>
-    <li><strong>Français</strong> — Langue maternelle</li>
-    <li><strong>Allemand</strong> — Fluide (C1-certified)</li>
-    <li><strong>Anglais</strong> — Fluide</li>
+    <li><strong>French</strong> — Native</li>
+    <li><strong>German</strong> — Fluent (C1-certified)</li>
+    <li><strong>English</strong> — Fluent</li>
   </ul>
 </details>
