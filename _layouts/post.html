@@ -11,7 +11,7 @@ script_includes:
 {% include lang.html %}
 <div class="lang-switcher mb-3">
   {% for language in site.languages %}
-    {% capture lang_url %}{% if language != site.default_lang %}/{{ language }}{% endif %}{{ page.permalink }}{% endcapture %}
+    {% capture lang_url %}{% if language != site.default_lang %}/{{ language }}{% endif %}{{ page.url }}{% endcapture %}
     <a
       {% static_href -%}
       href="{{ lang_url }}"
