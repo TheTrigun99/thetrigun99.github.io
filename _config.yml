@@ -21,7 +21,7 @@ lang: en
 
 title: Damien AUPRETRE # the main title
 
-tagline: Machine learning addict # it will display as the subtitle
+tagline: Currently - building transformers # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
