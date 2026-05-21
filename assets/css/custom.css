@@ -1,0 +1,51 @@
+/* Text color utilities for Markdown posts */
+.red {
+  color: #e74c3c;
+}
+.blue {
+  color: #2980b9;
+}
+.green {
+  color: #27ae60;
+}
+.orange {
+  color: #e67e22;
+}
+.purple {
+  color: #8e44ad;
+}
+.yellow {
+  color: #f1c40f;
+}
+.gray {
+  color: #7f8c8d;
+}
+
+/* Center all images in posts */
+p:has(img) {
+  text-align: center;
+}
+
+/* Image captions: italics immediately after an image paragraph */
+p:has(img) + p > em:only-child {
+  display: block;
+  text-align: center;
+  font-size: 0.85em;
+  color: #888;
+  margin-top: -0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* Bold variants */
+.red-bold {
+  color: #e74c3c;
+  font-weight: bold;
+}
+.blue-bold {
+  color: #2980b9;
+  font-weight: bold;
+}
+.green-bold {
+  color: #27ae60;
+  font-weight: bold;
+}
