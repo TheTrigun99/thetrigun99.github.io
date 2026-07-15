@@ -19,15 +19,13 @@ order: 1
 <details open>
   <summary><strong>Master of Engineering — CentraleSupélec (2024 – 2027)</strong></summary>
   <p>
-    Part of Université Paris-Saclay, ranked #12 worldwide (QS 2024). <br>
-    Relevant coursework: measure theory & integration, PDEs, information theory, fluid mechanics, signal processing, quantum physics, statistics, Stochastic processes.<br>
+    Part of Université Paris-Saclay, ranked #12 worldwide (QS 2024).
   </p>
 </details>
 
 <details>
   <summary><strong>CPGE PC* — Lycée Kléber (2022 – 2024)</strong></summary>
   <p>
-    Two-year intensive program in mathematics and physics, preparing for France's most selective engineering schools.
     <strong>Admitted to École Polytechnique</strong> (ranked #1 in France, top 0.1% of applicants), CentraleSupélec, Mines PSL (Most prestigious engineering schools)<br>
     GPA: 4.3 / 4.3
   </p>
@@ -46,12 +44,10 @@ order: 1
 ## Projects-Experience
 
 <details open>
-  <summary><strong>Explaining and implementing Research Papers in Machine learning — Personal Project (2025 - ??)</strong></summary>
+  <summary><strong>Research Papers — Personal Project (2025 - ??)</strong></summary>
   <ul>
-    <li>Focusing on a deep understand of machine learning algorithms/optimization and implementing these from scratch</li>
-    <li>Implemented Word2Vec (SGNS) from scratch, including the skip-gram objective and negative sampling.</li>
-    <li>Implemented the Safe Screening Gap Rule for LASSO — an optimisation technique that provably eliminates inactive features before convergence, dramatically reducing computation.</li>
-    <li>Built core regularisation methods (LASSO, Ridge)</li>
+    <li>Getting deep understanding of algorithms by implementing everything from scratch (and reflecting about it [most important part])</li>
+    <li>Implemented basics deep learning architectures (DiT, Diffusion, VAE, Word2Vec,...)</li>
   </ul>
 </details>
 
@@ -88,12 +84,10 @@ order: 1
 <details open>
   <summary><strong>Skills</strong></summary>
   <ul>
-    <li>Python (NumPy, pandas)</li>
-    <li>Machine learning</li>
-    <li>Linear Algebra</li>
+    <li>Python (NumPy, pandas, pytorch)</li>
+    <li>Machine learning/ Deep Learning</li>
     <li>R (statistical computing)</li>
-    <li>Stochastic processes</li>
-    <li>Communication</li>
+    <li>Humor</li>
   </ul>
 </details>
 
@@ -107,5 +101,6 @@ order: 1
     <li><strong>French</strong> — Native</li>
     <li><strong>German</strong> — Fluent (C1-certified)</li>
     <li><strong>English</strong> — Fluent</li>
+    <li><strong>Pytorch</strong> — Fluent (C1) </li>
   </ul>
 </details>
