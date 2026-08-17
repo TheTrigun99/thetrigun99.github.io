@@ -17,6 +17,13 @@ order: 1
 ## Education
 
 <details open>
+  <summary><strong>Internship VILAB - HYU (08/2026 – 02/2027)</strong></summary>
+  <p>
+    Working on reflection removal
+  </p>
+</details>
+
+<details open>
   <summary><strong>Master of Engineering — CentraleSupélec (2024 – 2027)</strong></summary>
   <p>
     Part of Université Paris-Saclay, ranked #12 worldwide (QS 2024).
@@ -46,17 +53,9 @@ order: 1
 <details open>
   <summary><strong>Research Papers — Personal Project (2025 - ??)</strong></summary>
   <ul>
+    <li>Working on diffusion/flow models </li>
     <li>Getting deep understanding of algorithms by implementing everything from scratch (and reflecting about it [most important part])</li>
     <li>Implemented basics deep learning architectures (DiT, Diffusion, VAE, Word2Vec,...)</li>
-  </ul>
-</details>
-
-<details>
-  <summary><strong>Kaggle Challenges — Personal Project (2025)</strong></summary>
-  <ul>
-    <li>Learned the machine learning basics and Deep Learning basic library and participated in 2 competitions </li>
-    <li>Predicted accident risk from tabular data using an ensemble of XGBoost, CatBoost, and neural networks.</li>
-    <li>Built a full ML pipeline covering feature engineering, hyperparameter tuning, and model stacking.</li>
   </ul>
 </details>
 
@@ -101,6 +100,6 @@ order: 1
     <li><strong>French</strong> — Native</li>
     <li><strong>German</strong> — Fluent (C1-certified)</li>
     <li><strong>English</strong> — Fluent</li>
-    <li><strong>Pytorch</strong> — Fluent (C1) </li>
+    <li><strong>Pytorch</strong> — Fluent (C1 not certified) </li>
   </ul>
 </details>
